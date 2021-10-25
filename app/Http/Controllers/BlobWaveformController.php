@@ -55,7 +55,7 @@ class BlobWaveformController extends Controller
         $deleteBlobWaveform->delete();
         return response()->json([
             'success' => true,
-            'message' => 'Blob Succesfully Deleted'
+            'message' => 'Waveform Succesfully Deleted'
         ]);
     }
 }
