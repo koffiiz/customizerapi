@@ -14,15 +14,16 @@ class ShopifyWebhookController extends Controller
     public function createOrder(Request $request) {
 
 
-
+        logger($request->all());
         $raw = json_encode($request->all());
         $line_items = $request->get("line_items");
         $order_id = intval($request->get("id"));
         $customer = $request->get("customer");
         $email = $request->get("email");
+        $total_price = $request->get('total_price');
 
         foreach ($line_items as $key => $line_item) {
-
+            $name = $line_item['name'];
             $properties = $line_item['properties'];
             $waveform_url = '';
             $waveform_audio_url = '';
@@ -92,8 +93,7 @@ class ShopifyWebhookController extends Controller
                         $size = explode("x", $sizeRaw);
                         $height = (int) $size[0] * 0.0254;
                         $width = (int) $size[1] * 0.0254;
-                        logger('Widht = '.$width);
-                        logger('Height = '.$height);
+
                         $splitedFirstWaveDataId = explode("id='", $property_value);
                         $splitedSecondWaveDataId = explode("'>Audio</div>", $splitedFirstWaveDataId[1]);
 
@@ -113,6 +113,10 @@ class ShopifyWebhookController extends Controller
                 'order_id' =>  $order_id,
                 'waveform_image_url' => $waveform_url,
                 'waveform_file_url' => $waveform_audio_url,
+                'product_name' => $name,
+                'total_price' => $total_price,
+                'height' => $height,
+                'widht' => $width,
             ];
 
             logger($data);
@@ -130,6 +134,7 @@ class ShopifyWebhookController extends Controller
 
             $waveData = BlobWaveform::find($waveform_data_id);
             $waveData->delete();
+            logger($order);
         }
     }
 }

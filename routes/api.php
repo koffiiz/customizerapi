@@ -24,3 +24,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::apiResource('blobwaveform', BlobWaveformController::class);
 Route::post('/waveform/order_create', [ShopifyWebhookController::class, 'createOrder']);
 Route::delete('/blobwaveform/{id}', [BlobWaveformController::class, 'destroy']);
+Route::get('/content/{id}', [OrderController::class, 'show']);
