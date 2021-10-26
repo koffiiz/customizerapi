@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BlobWaveformController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ShopifyWebhookController;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,11 +18,11 @@ use App\Http\Controllers\ShopifyWebhookController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::group(['middleware' => ['auth:sanctum']] ,function () {
+    Route::get('/content/{id}', [OrderController::class, 'show']);
 });
 
 Route::apiResource('blobwaveform', BlobWaveformController::class);
 Route::post('/waveform/order_create', [ShopifyWebhookController::class, 'createOrder']);
 Route::delete('/blobwaveform/{id}', [BlobWaveformController::class, 'destroy']);
-Route::get('/content/{id}', [OrderController::class, 'show']);
+Route::post('/register', [AuthController::class, 'register']);

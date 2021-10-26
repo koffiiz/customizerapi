@@ -16,7 +16,7 @@ class OrderController extends Controller
      */
     public function show($id)
     {
-        $order = Order::find($id);
+        $order = Order::where('customer_id', $id)->get();
         return response()->json([
             'success' => true,
             'data' => $order,
