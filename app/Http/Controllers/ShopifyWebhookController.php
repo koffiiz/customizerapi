@@ -8,6 +8,7 @@ use App\Models\BlobWaveform;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
+use File;
 
 class ShopifyWebhookController extends Controller
 {
@@ -80,13 +81,18 @@ class ShopifyWebhookController extends Controller
                         $audio_id = (int)$splitedSecondWaveaudioBlobId[0];
                         $blobData = BlobWaveform::find((int)$splitedSecondWaveaudioBlobId[0]);
 
-                        $waveFormDirectory = public_path("storage/waveformAudio");
+                        $waveFormDirectory = public_path("/waveformAudio");
                         $time = time();
+                        if(!File::exists($waveFormDirectory)) {
+                            File::makeDirectory($waveFormDirectory);
+                        }
 
                         $audio = str_replace("data:$blobData->blob_ext;base64,", '', $blobData->blob_data);
                         $final_path = $waveFormDirectory.'/'.$time.".$blobData->blob_raw_extention";
+                        $url = config('app.url').'/waveformAudio/'.$time.".$blobData->blob_raw_extention";
                         file_put_contents($final_path, base64_decode($audio));
-                        $waveform_audio_url = $final_path;
+
+                        $waveform_audio_url = $url;
                         break;
                     case 'WaveFormData':
                         $sizeRaw = $line_item['variant_title'];
