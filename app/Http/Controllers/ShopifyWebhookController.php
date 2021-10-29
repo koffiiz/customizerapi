@@ -13,9 +13,6 @@ use File;
 class ShopifyWebhookController extends Controller
 {
     public function createOrder(Request $request) {
-
-
-        logger($request->all());
         $raw = json_encode($request->all());
         $line_items = $request->get("line_items");
         $order_id = intval($request->get("id"));
@@ -66,12 +63,12 @@ class ShopifyWebhookController extends Controller
                                 $mail->AltBody = 'Body in plain text for non-HTML mail clients';
 
                                 if($mail->send()) {
-                                    echo "Mail has been sent successfully!";
+                                    logger("Mail has been sent successfully!") ;
                                 } else {
-                                    echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                                    logger( "Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
                                 }
                             } catch (Exception $e) {
-                                echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                                logger("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
                             }
                         break;
                     case 'Audio':
@@ -125,7 +122,6 @@ class ShopifyWebhookController extends Controller
                 'widht' => $width,
             ];
 
-            logger($data);
             $order = new Order;
             $order->customer_id = $customer['id'];
             $order->order_id = $order_id;
@@ -135,12 +131,110 @@ class ShopifyWebhookController extends Controller
             $order->raw = $raw;
             $order->save();
 
+            if($order->save()) {
+                if($line_item['title'] != 'Raw Artwork') {
+                    $curl = curl_init();
+                    $customer_default_address = $customer['default_address'];
+                    $customer_name = $customer_default_address['first_name'];
+                    $customer_address1 = $customer_default_address['address1'];
+                    $city = $customer_default_address['city'];
+                    $country_code = $customer_default_address['country_code'];
+                    $state_code = $customer_default_address['province_code'];
+                    $zip = $customer_default_address['zip'];
+                    $variantID = '';
+
+                    if($line_item['title'] == 'Poster') {
+                        if($line_item['variant_title'] == '8x10') {
+                            $variantID = 4463;
+                        }
+                        else if($line_item['variant_title'] == '12x16') {
+                            $variantID = 1349;
+                        }
+                        else if($line_item['variant_title'] == '16x20') {
+                            $variantID = 3877;
+                        }
+                        else if($line_item['variant_title'] == '24x36') {
+                            $variantID = 2;
+                        }
+                    } else if ($line_item['title'] == 'Framed Poster') {
+                        if($line_item['variant_title'] == '8x10') {
+                            $variantID = 4651;
+                        }
+                        else if($line_item['variant_title'] == '12x16') {
+                            $variantID = 1350;
+                        }
+                        else if($line_item['variant_title'] == '16x20') {
+                            $variantID = 4399;
+                        }
+                        else if($line_item['variant_title'] == '24x36') {
+                            $variantID = 3;
+                        }
+                    } else if ($line_item['title'] == 'Canvas') {
+                        if($line_item['variant_title'] == '12x16') {
+                            $variantID = 5;
+                        }
+                        else if($line_item['variant_title'] == '18x24') {
+                            $variantID = 7;
+                        }
+                        else if($line_item['variant_title'] == '24x36') {
+                            $variantID = 825 ;
+                        }
+                    }
+
+                    logger('Variant ID: '.$variantID);
+                    logger('Variant title: '.$line_item['variant_title'] );
+
+                    $data = json_encode(array(
+                        "recipient"  => [
+                            "name" => $customer_name,
+                            "address1" => $customer_address1,
+                            "city" => $city,
+                            "state_code" => $state_code,
+                            "country_code"=> $country_code,
+                            "zip" => $zip
+                        ],
+                        "items" => [
+                            [
+                                "variant_id" => $variantID,
+                                "quantity" => 1,
+                                "files" => [
+                                    [
+                                        "url" => $waveform_url
+                                    ]
+                                ]
+                            ]
+                        ],
+                        ));
+
+                    curl_setopt_array($curl, array(
+                    CURLOPT_URL => 'https://api.printful.com/orders',
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_ENCODING => '',
+                    CURLOPT_MAXREDIRS => 10,
+                    CURLOPT_TIMEOUT => 0,
+                    CURLOPT_FOLLOWLOCATION => true,
+                    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                    CURLOPT_CUSTOMREQUEST => 'POST',
+                    CURLOPT_HTTPHEADER => array(
+                        'Authorization: Basic NDZvMnY4b2otMGk5NS11NzQ2OnpwcDAtcDJtdGJnYmwzYWl3',
+                        'Content-Type: application/json',
+                    ),
+                    CURLOPT_POSTFIELDS => $data,
+                    ));
+
+                    $response = curl_exec($curl);
+                    logger($response);
+                    curl_close($curl);
+
+                }
+            }
+
             $blobData = BlobWaveform::find($audio_id);
             $blobData->delete();
 
             $waveData = BlobWaveform::find($waveform_data_id);
             $waveData->delete();
-            logger($order);
+
         }
     }
 }
