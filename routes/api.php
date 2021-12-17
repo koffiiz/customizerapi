@@ -28,7 +28,10 @@ Route::get('/login', function() {
 
 Route::apiResource('blobwaveform', BlobWaveformController::class);
 Route::post('/waveform/order_create', [ShopifyWebhookController::class, 'createOrder']);
+Route::post('/waveform/mailtest', [ShopifyWebhookController::class, 'mailTest']);
 Route::delete('/blobwaveform/{id}', [BlobWaveformController::class, 'destroy']);
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+Route::post('/update-users-password', [AuthController::class,'updateUsersPassword'])->name('updateUsersPassword');

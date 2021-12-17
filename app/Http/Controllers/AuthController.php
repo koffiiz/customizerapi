@@ -59,4 +59,31 @@ class AuthController extends Controller
         ]);
     }
 
+    public function updateUser($id) {
+
+        $user = User::where('password_reset' , $id)->first();
+
+        if($user) {
+            return view('Auth.updatePassword', ['user' => $user]);
+        } else {
+            return(404);
+        }
+
+    }
+
+    public function updateUsersPassword(Request $request) {
+        $user = User::where('password_reset' , $request->get('password_reset_token'))->first();
+        if($user) {
+            $user->password = Hash::make($request->get('password'));
+            if($user->save()) {
+                return view('Auth.successUpdate');
+            }
+            else {
+                abort(500);
+            }
+        }
+
+
+    }
+
 }
