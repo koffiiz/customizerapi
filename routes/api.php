@@ -35,3 +35,4 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
 Route::post('/update-users-password', [AuthController::class,'updateUsersPassword'])->name('updateUsersPassword');
+Route::post('/update-order', [OrderController::class, 'edit']);
